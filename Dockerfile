@@ -36,4 +36,7 @@ RUN if [ -f "composer.json" ]; then \
 # Step 8: Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
-EXPOSE 80
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+CMD ["entrypoint.sh"]
