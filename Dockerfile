@@ -11,10 +11,8 @@ RUN apt-get update && apt-get install -y \
 # Step 2: Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Step 3: Configure Apache DocumentRoot to serve the 'public' folder
+# Step 3: Define the DocumentRoot variable (will be applied in entrypoint)
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 WORKDIR /var/www/html
 
