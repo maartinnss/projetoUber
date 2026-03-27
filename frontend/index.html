@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motorista Particular Premium — Viagens com Conforto e Segurança</title>
+    <meta name="description" content="Serviço premium de motorista particular. Sedan executivo, SUV e Van de luxo. Agende sua viagem em segundos pelo WhatsApp.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-inner">
+            <a href="#" class="logo">
+                <span class="logo-icon">🚗</span>
+                <span class="logo-text">Driver<span class="accent">Elite</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#veiculos">Veículos</a></li>
+                <li><a href="#como-funciona">Como Funciona</a></li>
+                <li><a href="#sobre">Sobre Mim</a></li>
+                <li><a href="#depoimentos">Depoimentos</a></li>
+            </ul>
+            <a href="#agendar" class="btn btn-primary btn-sm">Agendar Agora</a>
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══ HERO ═══ -->
+    <section class="hero" id="hero">
+        <div class="hero-bg">
+            <div class="hero-gradient"></div>
+            <div class="hero-particles" id="particles"></div>
+        </div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <span class="badge animate-fade-in">✨ Serviço Premium</span>
+                <h1 class="animate-slide-up">
+                    Seu motorista<br>
+                    particular de<br>
+                    <span class="gradient-text">confiança</span>
+                </h1>
+                <p class="hero-subtitle animate-slide-up delay-1">
+                    Viagens executivas com conforto, pontualidade e segurança.
+                    Agende em 3 cliques e receba confirmação pelo WhatsApp.
+                </p>
+                <div class="hero-cta animate-slide-up delay-2">
+                    <a href="#agendar" class="btn btn-primary btn-lg">
+                        <span>Agendar Viagem</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#como-funciona" class="btn btn-ghost btn-lg">Saiba Mais</a>
+                </div>
+                <div class="hero-stats animate-fade-in delay-3">
+                    <div class="stat">
+                        <span class="stat-number" data-count="2500">0</span>+
+                        <span class="stat-label">Viagens</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" data-count="98">0</span>%
+                        <span class="stat-label">Satisfação</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" data-count="4">0</span>.9★
+                        <span class="stat-label">Avaliação</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-calculator animate-slide-up delay-1">
+                <div class="glass-card calculator-card">
+                    <h2 class="card-title">Calcule sua Viagem</h2>
+                    <p class="card-subtitle">Estimativa instantânea de valor</p>
+                    <form id="calculator-form" class="calculator-form">
+                        <div class="input-group">
+                            <label for="calc-origin">📍 Origem</label>
+                            <input type="text" id="calc-origin" placeholder="Ex: Aeroporto de Guarulhos" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label for="calc-destination">📍 Destino</label>
+                            <input type="text" id="calc-destination" placeholder="Ex: Av. Paulista, 1000" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label for="calc-vehicle">🚘 Veículo</label>
+                            <select id="calc-vehicle" required>
+                                <option value="">Carregando veículos...</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full btn-lg" id="calc-btn">
+                            <span>Calcular Estimativa</span>
+                        </button>
+                    </form>
+                    <div id="estimate-result" class="estimate-result hidden">
+                        <div class="result-row">
+                            <span>Distância estimada</span>
+                            <span id="result-distance" class="result-value">—</span>
+                        </div>
+                        <div class="result-row result-total">
+                            <span>Valor estimado</span>
+                            <span id="result-price" class="result-value price">—</span>
+                        </div>
+                        <a href="#agendar" class="btn btn-success btn-full" id="btn-agendar-from-calc">
+                            ✅ Agendar esta Viagem
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ VEÍCULOS ═══ -->
+    <section class="section" id="veiculos">
+        <div class="container">
+            <div class="section-header">
+                <span class="badge">🚘 Veículo</span>
+                <h2>Conheça nosso <span class="gradient-text">carro</span></h2>
+                <p>Selecionado especialmente para proporcionar a melhor experiência de viagem</p>
+            </div>
+            <div class="vehicles-grid" id="vehicles-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ COMO FUNCIONA ═══ -->
+    <section class="section section-alt" id="como-funciona">
+        <div class="container">
+            <div class="section-header">
+                <span class="badge">⚡ Simples</span>
+                <h2>Como <span class="gradient-text">funciona</span></h2>
+                <p>Em 3 passos rápidos, sua viagem está garantida</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step-card glass-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">📍</div>
+                    <h3>Informe o Trajeto</h3>
+                    <p>Digite o endereço de origem e destino e receba uma estimativa na hora.</p>
+                </div>
+                <div class="step-card glass-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">🚘</div>
+                    <h3>Escolha o Veículo</h3>
+                    <p>Sedan executivo, SUV premium ou Van de luxo. O que combina com você.</p>
+                </div>
+                <div class="step-card glass-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">✅</div>
+                    <h3>Confirme pelo WhatsApp</h3>
+                    <p>Clique e envie direto para nosso WhatsApp. Respondemos em minutos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ SOBRE O MOTORISTA ═══ -->
+    <section class="section" id="sobre">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image-wrapper reveal">
+                    <div class="about-image glass-card">
+                        <img src="motorista.jpg" alt="Foto do Motorista">
+                    </div>
+                </div>
+                <div class="about-text reveal">
+                    <span class="badge">👨‍💼 Experiência e Confiança</span>
+                    <h2>Seu <span class="gradient-text">Motorista</span> Exclusivo</h2>
+                    <p class="about-lead">Com anos de experiência no trânsito e no transporte executivo, garanto muito mais do que apenas uma viagem: proporciono pontualidade, discrição e segurança absoluta.</p>
+                    <p>Meu foco é realizar um atendimento personalizado e premium. Conheço as melhores rotas da cidade e estou sempre à disposição para tornar o seu trajeto o mais confortável e agradável possível, seja para reuniões de negócios, translado para o aeroporto ou eventos especiais.</p>
+                    <ul class="about-features">
+                        <li>✅ Certificação em Direção Defensiva</li>
+                        <li>✅ Pontualidade britânica garantida</li>
+                        <li>✅ Atendimento 100% focado no conforto do cliente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ DEPOIMENTOS ═══ -->
+    <section class="section section-alt" id="depoimentos">
+        <div class="container">
+            <div class="section-header">
+                <span class="badge">⭐ Confiança</span>
+                <h2>O que nossos clientes <span class="gradient-text">dizem</span></h2>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card glass-card">
+                    <div class="stars">★★★★★</div>
+                    <p>"Pontualidade impecável. Sempre que chego no aeroporto, o motorista já está me esperando. Recomendo demais!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MG</div>
+                        <div>
+                            <strong>Marcos G.</strong>
+                            <span>Executivo, São Paulo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card glass-card">
+                    <div class="stars">★★★★★</div>
+                    <p>"Usamos para transfers da equipe inteira. O serviço de Van é excepcional. Profissionalismo nota 10."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">JL</div>
+                        <div>
+                            <strong>Juliana L.</strong>
+                            <span>Gerente de RH, Campinas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card glass-card">
+                    <div class="stars">★★★★★</div>
+                    <p>"Preço justo, carro impecável e motorista educado. Já é meu motorista fixo para viagens de negócios."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">RS</div>
+                        <div>
+                            <strong>Rafael S.</strong>
+                            <span>Empresário, Santos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ FORMULÁRIO DE AGENDAMENTO ═══ -->
+    <section class="section section-alt" id="agendar">
+        <div class="container">
+            <div class="section-header">
+                <span class="badge">📅 Agendar</span>
+                <h2>Reserve sua <span class="gradient-text">viagem</span></h2>
+                <p>Preencha os dados e confirme via WhatsApp</p>
+            </div>
+            <div class="booking-wrapper">
+                <form id="booking-form" class="booking-form glass-card">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label for="book-name">👤 Seu Nome</label>
+                            <input type="text" id="book-name" placeholder="Nome completo" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="book-whatsapp">📱 WhatsApp</label>
+                            <input type="tel" id="book-whatsapp" placeholder="(11) 99999-9999" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="book-origin">📍 Origem</label>
+                            <input type="text" id="book-origin" placeholder="Endereço de saída" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label for="book-destination">📍 Destino</label>
+                            <input type="text" id="book-destination" placeholder="Endereço de chegada" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label for="book-datetime">📅 Data e Hora</label>
+                            <input type="datetime-local" id="book-datetime" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="book-vehicle">🚘 Veículo</label>
+                            <select id="book-vehicle" required>
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-full btn-lg" id="booking-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 17.407c-.266.746-.793 1.342-1.486 1.684C15.61 19.453 14.812 19.5 14 19.5c-.812 0-1.61-.047-2.408-.409-.693-.342-1.22-.938-1.486-1.684-.266-.746-.266-1.646 0-2.392l.009-.025C11.393 11.83 12 8.5 12 8.5s.607 3.33 1.885 6.49l.009.025c.266.746.266 1.646 0 2.392z" fill-rule="evenodd"/></svg>
+                        <span>Confirmar via WhatsApp</span>
+                    </button>
+                </form>
+
+                <div id="booking-success" class="booking-success glass-card hidden">
+                    <div class="success-icon">🎉</div>
+                    <h3>Agendamento Registrado!</h3>
+                    <p>Clique no botão abaixo para enviar a confirmação pelo WhatsApp:</p>
+                    <a id="whatsapp-link" href="#" target="_blank" class="btn btn-whatsapp btn-full btn-lg">
+                        💬 Abrir WhatsApp
+                    </a>
+                    <button class="btn btn-ghost" id="new-booking-btn">Fazer outro agendamento</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div class="footer-brand">
+                <span class="logo-icon">🚗</span>
+                <span class="logo-text">Driver<span class="accent">Elite</span></span>
+                <p>Seu motorista particular de confiança.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#veiculos">Veículos</a>
+                <a href="#como-funciona">Como Funciona</a>
+                <a href="#sobre">Sobre Mim</a>
+                <a href="#depoimentos">Depoimentos</a>
+                <a href="#agendar">Agendar</a>
+            </div>
+            <p class="footer-copy">© 2026 DriverElite. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="app.js?v=6"></script>
+</body>
+</html>

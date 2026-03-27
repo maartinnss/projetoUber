@@ -1,0 +1,18 @@
+# Environments
+/.env
+
+# Dependencies
+/backend/vendor/
+/node_modules/
+
+# IDEs and System files
+/.vscode/
+/.idea/
+/.agent/
+.agent/
+.DS_Store
+Thumbs.db
+
+# Logs and DB
+*.log
+*.sqlite
