@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Se o arquivo ou diretório existir, serve ele diretamente
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Caso contrário, manda para o index.php (necessário para a API funcionar)
+RewriteRule ^ index.php [L]
