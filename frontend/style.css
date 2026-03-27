@@ -64,10 +64,20 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+body.no-scroll {
+    overflow: hidden;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
+}
+
+@media (max-width: 400px) {
+    .container {
+        padding: 0 16px;
+    }
 }
 
 /* ─── Utilities ─── */
@@ -100,6 +110,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     transition: all 0.4s var(--ease-smooth);
+    width: 100%;
 }
 
 .glass-card:hover {
@@ -140,8 +151,12 @@ body {
     transform: translateX(100%);
 }
 
-.btn-sm { padding: 8px 20px; font-size: 0.875rem; }
-.btn-lg { padding: 16px 32px; font-size: 1.05rem; }
+.btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+.btn-lg { padding: 14px 28px; font-size: 1rem; }
+
+@media (max-width: 380px) {
+    .btn-lg { padding: 12px 20px; font-size: 0.95rem; }
+}
 .btn-full { width: 100%; }
 
 .btn-primary {
@@ -273,7 +288,20 @@ body {
     height: 2px;
     background: var(--text-primary);
     border-radius: 2px;
-    transition: all 0.3s;
+    transition: all 0.3s var(--ease-smooth);
+}
+
+.mobile-toggle.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.mobile-toggle.active span:nth-child(2) {
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+.mobile-toggle.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ─── Hero ─── */
@@ -973,7 +1001,7 @@ body {
 @media (max-width: 968px) {
     .hero-content {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 0;
         text-align: center;
     }
 
@@ -994,21 +1022,79 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .nav-links { display: none; }
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(10, 10, 18, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 100px 40px;
+        gap: 32px;
+        z-index: -1;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-20px);
+        transition: all 0.4s var(--ease-smooth);
+    }
+
+    .nav-links.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .nav-links a {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
     .navbar .btn-sm { display: none; }
-    .mobile-toggle { display: flex; }
+    .mobile-toggle { display: flex; z-index: 1001; }
 }
 
 @media (max-width: 480px) {
-    .hero { padding: 80px 0 40px; }
+    .container { padding: 0 16px; }
+    .hero { padding: 60px 0 40px; }
+    .hero-text h1 { font-size: clamp(1.8rem, 8vw, 2.4rem); }
 
-    .calculator-card { padding: 24px; }
-    .booking-form { padding: 24px; }
-    .booking-success { padding: 32px 24px; }
+    .hero-cta { flex-direction: column; width: 100%; max-width: 320px; margin: 0 auto 32px; }
+    .btn-lg { width: 100%; }
 
-    .hero-stats { gap: 20px; }
+    .calculator-card { padding: 24px 16px; }
+    .booking-form { padding: 24px 16px; }
+    .booking-success { padding: 32px 16px; }
+
+    .hero-stats { gap: 15px; flex-wrap: wrap; justify-content: space-around; }
+    .stat-number { font-size: 1.4rem; }
 
     .vehicles-grid {
         grid-template-columns: 1fr;
     }
+
+    .hero-content { gap: 20px; }
+    .hero-stats { gap: 10px; }
+    .hero-cta { width: 100%; }
+    .calculator-card { padding: 20px; width: 100%; max-width: 100%; margin: 0; }
+    .booking-form { padding: 20px; width: 100%; }
+    .calculator-form, .form-grid { gap: 12px; }
+    .input-group label { font-size: 0.8rem; margin-bottom: 2px; }
+}
+
+@media (max-width: 360px) {
+    .container { padding: 0 16px !important; }
+    .hero-text h1 { font-size: 1.8rem; }
+    .hero-subtitle { font-size: 0.95rem; }
+    .navbar .container { padding: 0 16px; }
+    .hero-content { gap: 0; display: block; }
+    .hero-stats { gap: 8px; justify-content: center; }
+    .calculator-card { padding: 16px; width: 100% !important; margin: 0 auto; box-sizing: border-box; }
+    .booking-form { padding: 16px; }
+    .calculator-form, .form-grid { gap: 10px; }
+    .input-group input, .input-group select { font-size: 0.85rem; padding: 10px 12px; }
 }

@@ -43,8 +43,29 @@ function initParticles() {
 // ─── Navbar Scroll Effect ───
 function initNavbar() {
     const navbar = document.getElementById('navbar');
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    const navItems = document.querySelectorAll('.nav-links a');
+
+    // Scroll effect
     window.addEventListener('scroll', () => {
         navbar.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // Mobile menu toggle
+    mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+        document.body.classList.toggle('no-scroll');
+    });
+
+    // Close menu when clicking links
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            mobileToggle?.classList.remove('active');
+            navLinks?.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+        });
     });
 }
 
