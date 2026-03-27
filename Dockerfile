@@ -37,6 +37,6 @@ RUN if [ -f "composer.json" ]; then \
 RUN chown -R www-data:www-data /var/www/html
 
 COPY entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 CMD ["entrypoint.sh"]
