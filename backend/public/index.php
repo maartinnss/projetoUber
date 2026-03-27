@@ -25,6 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// ─── Router & Healthcheck ─────────────────────────────────────
+$method = $_SERVER['REQUEST_METHOD'];
+$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+if ($method === 'GET' && $uri === '/api/health') {
+    JsonResponse::success(['status' => 'ok', 'timestamp' => date('c')]);
+    exit;
+}
+if ($method === 'GET' && $uri === '/') {
+    // Caso de requisição cair aqui erradamente, serve 200 para saúde
+    echo "OK"; 
+    exit;
+}
+
 // ─── DI (Poor Man's Container) ──────────────────────────────
 try {
     $pdo = Connection::getInstance();
@@ -43,17 +57,10 @@ $vehicleController  = new VehicleController($veiculoRepo);
 $estimateController = new EstimateController($estimateService, $whatsAppService);
 $bookingController  = new BookingController($bookingService);
 
-// ─── Router ─────────────────────────────────────────────────
-$method = $_SERVER['REQUEST_METHOD'];
-$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
 match (true) {
     $method === 'GET'  && $uri === '/api/vehicles'  => $vehicleController->index(),
     $method === 'POST' && $uri === '/api/estimate'   => $estimateController->estimate(),
     $method === 'POST' && $uri === '/api/booking'    => $bookingController->store(),
-
-    // Health check
-    $method === 'GET'  && $uri === '/api/health'     => JsonResponse::success(['status' => 'ok', 'timestamp' => date('c')]),
 
     // 404
     default => JsonResponse::error('Rota não encontrada: ' . $method . ' ' . $uri, 404),
