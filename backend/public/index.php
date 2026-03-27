@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+// ─── Healthcheck Precoce (Bypass para Deploy) ─────────────────
+// Esto evita que o Railway cancele o deploy se o banco de dados estiver fora do ar.
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+if ($uri === '/api/health' || $uri === '/') {
+    http_response_code(200);
+    echo "OK";
+    exit;
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Infrastructure\Database\Connection;
@@ -25,20 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// ─── Router & Healthcheck ─────────────────────────────────────
-$method = $_SERVER['REQUEST_METHOD'];
-$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-if ($method === 'GET' && $uri === '/api/health') {
-    JsonResponse::success(['status' => 'ok', 'timestamp' => date('c')]);
-    exit;
-}
-if ($method === 'GET' && $uri === '/') {
-    // Caso de requisição cair aqui erradamente, serve 200 para saúde
-    echo "OK"; 
-    exit;
-}
-
 // ─── DI (Poor Man's Container) ──────────────────────────────
 try {
     $pdo = Connection::getInstance();
@@ -56,6 +51,9 @@ $bookingService  = new BookingService($agendamentoRepo, $veiculoRepo, $estimateS
 $vehicleController  = new VehicleController($veiculoRepo);
 $estimateController = new EstimateController($estimateService, $whatsAppService);
 $bookingController  = new BookingController($bookingService);
+
+// ─── Router ─────────────────────────────────────────────────
+$method = $_SERVER['REQUEST_METHOD'];
 
 match (true) {
     $method === 'GET'  && $uri === '/api/vehicles'  => $vehicleController->index(),
