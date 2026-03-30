@@ -123,17 +123,29 @@ function initScrollReveal() {
 
 // ─── Load Vehicles ───
 async function loadVehicles() {
-    // Frota fixa solicitada: Nissan Versa 1.0 Conforto
-    vehicles = [
-        { id: 1, modelo: 'Nissan Versa 1.0 Conforto', tipo: 'sedan', capacidade_passageiros: 4, preco_por_km: 3.50, imagem_url: null }
-    ];
+    try {
+        const res = await fetch(`${API_BASE}/vehicles`);
+        const json = await res.json();
+        
+        if (json.success && json.data.length > 0) {
+            vehicles = json.data;
+        } else {
+            throw new Error("Lista vazia da API");
+        }
+    } catch (err) {
+        console.warn("Falha ao carregar veículos reais da API, usando listagem de contingência", err);
+        vehicles = [
+            { id: 1, modelo: 'Nissan Versa 1.0 Conforto', tipo: 'sedan', capacidade_passageiros: 4, preco_por_km: 3.50, imagem_url: null }
+        ];
+    }
+    
     renderVehicleCards();
     populateVehicleSelects();
 }
 
 function getVehicleEmoji(tipo) {
     const map = { sedan: '🚗', suv: '🚙', van: '🚐' };
-    return map[tipo] || '🚗';
+    return map[tipo || 'sedan'] || '🚗';
 }
 
 function getVehicleFeatures(tipo) {
@@ -142,25 +154,30 @@ function getVehicleFeatures(tipo) {
         suv:   ['Espaço extra de bagagem', 'Bancos reclináveis', 'Suspensão premium', 'Sound system premium'],
         van:   ['Até 10 passageiros', 'TV e entretenimento', 'Cooler com bebidas', 'Espaço amplo para bagagem'],
     };
-    return map[tipo] || map.sedan;
+    return map[tipo || 'sedan'] || map.sedan;
 }
 
 function renderVehicleCards() {
     const grid = document.getElementById('vehicles-grid');
     if (!grid) return;
 
-    grid.innerHTML = vehicles.map(v => `
+    grid.innerHTML = vehicles.map(v => {
+        const t = v.tipo || 'sedan';
+        const cap = v.capacidade_passageiros || 4;
+        const price = Number(v.preco_por_km || 3.5).toFixed(2);
+        
+        return `
         <div class="vehicle-card glass-card">
-            <span class="vehicle-icon">${getVehicleEmoji(v.tipo)}</span>
-            <h3>${v.modelo}</h3>
-            <p class="vehicle-cap">${v.tipo.charAt(0).toUpperCase() + v.tipo.slice(1)} · ${v.capacidade_passageiros} passageiros</p>
-            <div class="vehicle-price gradient-text">R$ ${Number(v.preco_por_km).toFixed(2)}</div>
+            <span class="vehicle-icon">${getVehicleEmoji(t)}</span>
+            <h3>${v.modelo || 'Veículo'}</h3>
+            <p class="vehicle-cap">${t.charAt(0).toUpperCase() + t.slice(1)} · ${cap} passageiros</p>
+            <div class="vehicle-price gradient-text">R$ ${price}</div>
             <p class="vehicle-price-unit">por quilômetro</p>
             <ul class="vehicle-features">
-                ${getVehicleFeatures(v.tipo).map(f => `<li>${f}</li>`).join('')}
+                ${getVehicleFeatures(t).map(f => `<li>${f}</li>`).join('')}
             </ul>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function populateVehicleSelects() {
@@ -172,9 +189,11 @@ function populateVehicleSelects() {
     selects.forEach(sel => {
         if (!sel) return;
         sel.innerHTML = '<option value="">Selecione um veículo</option>' +
-            vehicles.map(v =>
-                `<option value="${v.id}">${getVehicleEmoji(v.tipo)} ${v.modelo} — R$ ${Number(v.preco_por_km).toFixed(2)}/km</option>`
-            ).join('');
+            vehicles.map(v => {
+                const t = v.tipo || 'sedan';
+                const price = Number(v.preco_por_km || 3.5).toFixed(2);
+                return `<option value="${v.id}">${getVehicleEmoji(t)} ${v.modelo || 'Veículo'} — R$ ${price}/km</option>`
+            }).join('');
     });
 }
 
@@ -214,32 +233,11 @@ function initCalculator() {
                 };
                 showEstimateResult(json.data);
             } else {
-                // Fallback: simular localmente
-                const vehicle = vehicles.find(v => v.id == vehicleId);
-                const fakeKm = 15 + Math.random() * 50;
-                const fakePrice = fakeKm * (vehicle?.preco_por_km || 3.5);
-                lastEstimate = {
-                    distancia_km: fakeKm,
-                    preco_estimado: fakePrice,
-                    origin,
-                    destination,
-                    vehicleId,
-                };
-                showEstimateResult(lastEstimate);
+                alert("Erro: " + (json.error || json.message || "Não foi possível calcular a rota. Falha no formulário ou servidor."));
             }
-        } catch {
-            // Offline fallback
-            const vehicle = vehicles.find(v => v.id == vehicleId);
-            const fakeKm = 15 + Math.random() * 50;
-            const fakePrice = fakeKm * (vehicle?.preco_por_km || 3.5);
-            lastEstimate = {
-                distancia_km: fakeKm,
-                preco_estimado: fakePrice,
-                origin,
-                destination,
-                vehicleId,
-            };
-            showEstimateResult(lastEstimate);
+        } catch (err) {
+            console.error(err);
+            alert("Falha ao comunicar com o servidor. A API pode estar desligada, sem banco de dados, ou inacessível.");
         } finally {
             btn.classList.remove('loading');
         }
@@ -249,7 +247,7 @@ function initCalculator() {
 function showEstimateResult(data) {
     const result = document.getElementById('estimate-result');
     document.getElementById('result-distance').textContent = `${Number(data.distancia_km).toFixed(1)} km`;
-    document.getElementById('result-price').textContent = `R$ ${Number(data.preco_estimado).toFixed(2)}`;
+    document.getElementById('result-price').textContent = `R$ ${Number(data.valor_estimado).toFixed(2)}`;
     result.classList.remove('hidden');
 
     // Pre-fill booking form
@@ -308,7 +306,7 @@ function initBookingForm() {
         });
 
         const priceText = lastEstimate
-            ? `\n💰 Estimativa: R$ ${Number(lastEstimate.preco_estimado).toFixed(2)}`
+            ? `\n💰 Estimativa: R$ ${Number(lastEstimate.valor_estimado).toFixed(2)}`
             : '';
 
         const message = encodeURIComponent(
@@ -403,34 +401,18 @@ function initAutocomplete() {
 
 async function fetchSuggestions(query, dropdown, input) {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&addressdetails=1&limit=5`;
-        const res = await fetch(url, {
-            headers: {
-                'Accept-Language': 'pt-BR,pt;q=0.9'
-            }
-        });
-        const data = await res.json();
+        const url = `${API_BASE}/places?q=${encodeURIComponent(query)}`;
+        const res = await fetch(url);
+        const json = await res.json();
 
         dropdown.innerHTML = '';
 
-        if (data && data.length > 0) {
-            data.forEach(place => {
+        if (json.success && json.data && json.data.length > 0) {
+            json.data.forEach(place => {
                 const item = document.createElement('div');
                 item.className = 'autocomplete-item';
 
-                // Format friendly address name
-                const address = place.address;
-                let displayName = place.display_name;
-                
-                if (address) {
-                    const street = address.road || address.pedestrian || address.suburb || '';
-                    const city = address.city || address.town || address.village || address.municipality || '';
-                    const state = address.state || '';
-                    if (street && city) {
-                        displayName = `${street}, ${city} - ${state}`;
-                    }
-                }
-
+                const displayName = place.display_name;
                 item.textContent = displayName;
 
                 item.addEventListener('click', () => {

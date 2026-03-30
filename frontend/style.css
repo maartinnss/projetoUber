@@ -132,6 +132,7 @@ body.no-scroll {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    line-height: 1; /* Garante que o texto não empurre o ícone para fora do centro */
     gap: 8px;
     font-family: var(--font-primary);
     font-weight: 600;
@@ -211,7 +212,7 @@ body.no-scroll {
     background: linear-gradient(135deg, #25D366, #128C7E);
     color: white;
     box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
-    font-size: 1.1rem;
+    font-size: 1.05rem; /* Ajuste leve de tamanho para melhor alinhamento visual */
 }
 
 .btn-whatsapp:hover {
@@ -242,6 +243,7 @@ body.no-scroll {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 48px; /* Altura fixa para garantir alinhamento perfeito */
 }
 
 .logo {
@@ -338,7 +340,10 @@ body.no-scroll {
     .nav-links a:hover { color: var(--text-primary); }
     .nav-links a:hover::after { transform: scaleX(1); }
 
-    .navbar .btn-sm { display: inline-flex; }
+    .navbar .btn-sm { 
+        display: inline-flex; 
+        align-items: center;
+    }
     .mobile-toggle { display: none; }
 }
 
@@ -447,6 +452,7 @@ body.no-scroll {
         grid-template-columns: 1.2fr 0.8fr;
         gap: 60px;
         text-align: left;
+        align-items: flex-start; /* Alinhado pelo topo no desktop */
     }
 }
 
@@ -512,7 +518,10 @@ body.no-scroll {
 }
 
 @media (min-width: 968px) {
-    .hero-stats { justify-content: flex-start; }
+    .hero-stats { 
+        justify-content: flex-start; 
+        gap: 56px; /* Mais respiro entre stats */
+    }
 }
 
 .stat {
@@ -542,6 +551,13 @@ body.no-scroll {
     padding: 20px 16px; /* Padding menor no mobile para ganhar espaço */
     box-shadow: var(--shadow-lg);
     width: 100%;
+    margin-top: 12px; /* Pequeno ajuste para alinhar o topo do card com o badge no desktop */
+}
+
+@media (min-width: 968px) {
+    .calculator-card {
+        margin-top: 0; /* No desktop, o align-items: flex-start já cuida do alinhamento */
+    }
 }
 
 @media (min-width: 768px) {
@@ -583,7 +599,7 @@ body.no-scroll {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px; /* Mais espaço entre label e input */
     position: relative;
 }
 
@@ -591,6 +607,9 @@ body.no-scroll {
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Espaço para o emoji */
 }
 
 .input-group input,
@@ -820,8 +839,10 @@ body.no-scroll {
 
 .vehicle-features {
     list-style: none;
-    margin-top: 20px;
+    margin: 24px auto 0;
     text-align: left;
+    width: fit-content; /* Alternativa moderna ao display: table */
+    max-width: 100%;
 }
 
 .vehicle-features li {

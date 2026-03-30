@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Application\Service\BookingService;
 use App\Infrastructure\Http\JsonResponse;
+use App\Infrastructure\Http\Request;
 
 class BookingController
 {
@@ -13,12 +14,12 @@ class BookingController
         private readonly BookingService $bookingService,
     ) {}
 
-    public function store(): void
+    public function store(Request $request): void
     {
-        $body = json_decode(file_get_contents('php://input'), true);
+        $body = $request->all();
 
-        if (!$body) {
-            JsonResponse::error('JSON inválido no corpo da requisição.', 400);
+        if (empty($body)) {
+            JsonResponse::error('Requisição sem payload (JSON inválido/vazio).', 400);
             return;
         }
 

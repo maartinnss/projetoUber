@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Application\Service\EstimateService;
 use App\Application\Service\WhatsAppService;
 use App\Infrastructure\Http\JsonResponse;
+use App\Infrastructure\Http\Request;
 
 class EstimateController
 {
@@ -15,11 +16,11 @@ class EstimateController
         private readonly WhatsAppService $whatsAppService,
     ) {}
 
-    public function estimate(): void
+    public function estimate(Request $request): void
     {
-        $body = json_decode(file_get_contents('php://input'), true);
+        $body = $request->all();
 
-        if (!$body || empty($body['origem']) || empty($body['destino']) || empty($body['veiculo_id'])) {
+        if (empty($body['origem']) || empty($body['destino']) || empty($body['veiculo_id'])) {
             JsonResponse::error('Campos obrigatórios: origem, destino, veiculo_id', 422);
             return;
         }

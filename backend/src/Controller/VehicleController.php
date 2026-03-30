@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Domain\Repository\VeiculoRepositoryInterface;
 use App\Infrastructure\Http\JsonResponse;
+use App\Infrastructure\Http\Request;
 
 class VehicleController
 {
@@ -13,7 +14,7 @@ class VehicleController
         private readonly VeiculoRepositoryInterface $veiculoRepo,
     ) {}
 
-    public function index(): void
+    public function index(Request $request): void
     {
         $veiculos = $this->veiculoRepo->findAllActive();
 
