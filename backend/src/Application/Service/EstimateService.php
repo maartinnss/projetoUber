@@ -54,15 +54,18 @@ class EstimateService
         
         $url = "http://router.project-osrm.org/route/v1/driving/{$coordsString}?overview=false";
 
-        $context = stream_context_create([
-            'http' => [
-                'header' => "User-Agent: DriverEliteApp/1.0\r\n",
-                'timeout' => 4.0 // Limita a espera em 4 segundos para evitar travamento infinito no frontend
-            ]
-        ]);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'DriverEliteApp/1.0');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-        $response = @file_get_contents($url, false, $context);
-        if ($response) {
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response && $httpCode === 200) {
             $data = json_decode($response, true);
             if (isset($data['routes'][0]['distance'])) {
                 // Distância é dada em metros
@@ -73,14 +76,16 @@ class EstimateService
                 
                 // Se a distância de rota for maior que 4 vezes a linha reta ou zero, é falsa.
                 if ($km < 0.1 || $km > ($haversine * 4)) {
-                    return round($haversine * 1.35, 1); // Multiplicador de sinuosidade
+                    return round($haversine * 1.35, 1);
                 }
                 
                 return $km;
             }
         }
 
-        return $this->fallbackEstimateDistance($origem, $destino);
+        // OSRM falhou, mas já temos as coordenadas — calcula via Haversine diretamente
+        $haversine = $this->haversineGreatCircleDistance($origemCoords[0], $origemCoords[1], $destinoCoords[0], $destinoCoords[1]);
+        return round($haversine * 1.35, 1);
     }
 
     /**
@@ -98,22 +103,13 @@ class EstimateService
     }
 
     /**
-     * Gera distância determinística caso a API falhe totalmente.
+     * Gera distância determinística caso todas as APIs falhem.
      */
     private function fallbackEstimateDistance(string $origem, string $destino): float
     {
-        // Se as APIs locais caírem, tenta usar o haversine antes de desistir
-        $origemCoords = $this->geocode($origem);
-        $destinoCoords = $this->geocode($destino);
-        
-        if ($origemCoords && $destinoCoords) {
-            $linhaReta = $this->haversineGreatCircleDistance($origemCoords[0], $origemCoords[1], $destinoCoords[0], $destinoCoords[1]);
-            return round($linhaReta * 1.35, 1); // multiplicador médio de ruído urbano
-        }
-
-        // Caso a Geocodificação (Photon) também tenha caído
+        // Seed determinístico baseado nos endereços
         $seed = crc32(mb_strtolower(trim($origem) . '|' . trim($destino)));
-        $normalized = abs($seed) / 4294967295; // Normaliza para 0-1
+        $normalized = abs($seed) / 4294967295;
         $distancia = 5 + ($normalized * 40); // Entre 5 e 45 km
 
         return round($distancia, 1);

@@ -12,19 +12,23 @@ class PlacesService
      */
     public function search(string $query): array
     {
-        // Adiciona "Brasil" implicitamente para afunilar a busca, ou usa bbox no futuro.
+        // Adiciona "Brasil" implicitamente para afunilar a busca.
         $encodedQuery = urlencode($query . ", Brasil");
         $url = "https://photon.komoot.io/api/?q={$encodedQuery}&limit=15";
 
-        $context = stream_context_create([
-            'http' => [
-                'header' => "User-Agent: DriverEliteApp/1.0\r\n"
-            ]
-        ]);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'DriverEliteApp/1.0');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout de 5 segundos para não travar o PHP
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-        $response = @file_get_contents($url, false, $context);
-        
-        if (!$response) {
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+
+        if ($response === false || $httpCode !== 200) {
+            error_log("PlacesService Error: [HTTP $httpCode] " . ($error ?: "Falha na resposta da Photon API"));
             return [];
         }
 
@@ -70,8 +74,7 @@ class PlacesService
             $displayName = implode(', ', $displayNameParts);
 
             // Evitar exibir "Brasil" poluidamente toda vez
-            $displayName = str_replace(', Brazil', '', $displayName);
-            $displayName = str_replace(', Brasil', '', $displayName);
+            $displayName = str_replace([', Brazil', ', Brasil'], '', $displayName);
 
             // Fingerprint único combinando o nome do endereço exibido
             $fingerprint = md5(mb_strtolower($displayName));

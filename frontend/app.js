@@ -3,14 +3,16 @@
    ═══════════════════════════════════════════ */
 
 const API_BASE = '/api';
-const WHATSAPP_NUMBER = '554896643792'; // Ajustar no .env / backend
 
 // ─── State ───
 let vehicles = [];
 let lastEstimate = null;
+let appConfig = { whatsapp_number: '' };
+
 
 // ─── DOM Ready ───
 document.addEventListener('DOMContentLoaded', () => {
+    loadConfig();
     initParticles();
     initNavbar();
     initCounters();
@@ -21,6 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setMinDatetime();
     initAutocomplete();
 });
+
+// ─── Load App Config ───
+async function loadConfig() {
+    try {
+        const res = await fetch(`${API_BASE}/config`);
+        const json = await res.json();
+        if (json.success && json.data) {
+            appConfig = json.data;
+        }
+    } catch (err) {
+        console.warn('Falha ao carregar configuração, usando fallback.', err);
+    }
+}
 
 // ─── Particles Background ───
 function initParticles() {
@@ -321,7 +336,7 @@ function initBookingForm() {
             `\n\n_Enviado pelo site DriverElite_`
         );
 
-        const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+        const waLink = `https://wa.me/${appConfig.whatsapp_number}?text=${message}`;
 
         // Mostrar sucesso no layout
         form.classList.add('hidden');

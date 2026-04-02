@@ -29,6 +29,7 @@ class BookingController
         } catch (\InvalidArgumentException $e) {
             JsonResponse::error($e->getMessage(), 422);
         } catch (\Throwable $e) {
+            error_log('[BookingController] Erro não tratado: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             JsonResponse::error('Erro interno do servidor.', 500);
         }
     }

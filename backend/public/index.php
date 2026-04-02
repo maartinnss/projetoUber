@@ -23,9 +23,11 @@ use App\Controller\VehicleController;
 use App\Controller\EstimateController;
 use App\Controller\BookingController;
 use App\Controller\PlacesController;
+use App\Controller\ConfigController;
 use App\Infrastructure\Http\JsonResponse;
 use App\Infrastructure\Http\Request;
 use App\Infrastructure\Http\Router;
+use App\Infrastructure\Http\RateLimiter;
 
 // ─── Global Error Handler ───────────────────────────────────
 set_exception_handler(function (\Throwable $e) {
@@ -43,29 +45,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// ─── DI (Poor Man's Container) ──────────────────────────────
-$pdo = Connection::getInstance();
+// ─── Rate Limiter Middleware ───────────────────────────────────
+$rateLimiter = new RateLimiter();
+if (!$rateLimiter->allow($uri)) {
+    JsonResponse::error('Muitas requisições. Tente novamente em alguns segundos.', 429);
+    exit;
+}
 
-$veiculoRepo  = new PdoVeiculoRepository($pdo);
-$agendamentoRepo = new PdoAgendamentoRepository($pdo);
-$whatsAppService = new WhatsAppService();
-// Instancia o novo serviço de pesquisa de lugares (Photon)
-$placesService   = new PlacesService();
-$estimateService = new EstimateService($veiculoRepo, $placesService);
-$bookingService  = new BookingService($agendamentoRepo, $veiculoRepo, $estimateService, $whatsAppService);
-
-$vehicleController  = new VehicleController($veiculoRepo);
-$estimateController = new EstimateController($estimateService, $whatsAppService);
-$bookingController  = new BookingController($bookingService);
-$placesController   = new PlacesController($placesService);
-
-// ─── Router ─────────────────────────────────────────────────
+// ─── DI & Routing (Lazy Loading pattern) ──────────────────────
 $router = new Router();
 $request = new Request();
 
-$router->get('/api/places', [$placesController, 'search']);
-$router->get('/api/vehicles', [$vehicleController, 'index']);
-$router->post('/api/estimate', [$estimateController, 'estimate']);
-$router->post('/api/booking', [$bookingController, 'store']);
+// Rota de configurações públicas - NÃO precisa de banco de dados
+if (str_starts_with($uri, '/api/config')) {
+    $configController = new ConfigController();
+    $router->get('/api/config', [$configController, 'index']);
+}
+// Rota de busca de endereços - NÃO precisa de banco de dados
+elseif (str_starts_with($uri, '/api/places')) {
+    $placesService = new PlacesService();
+    $placesController = new PlacesController($placesService);
+    $router->get('/api/places', [$placesController, 'search']);
+} 
+// Rota de veículos - PRECISA de banco de dados
+elseif (str_starts_with($uri, '/api/vehicles')) {
+    $pdo = Connection::getInstance();
+    $veiculoRepo = new PdoVeiculoRepository($pdo);
+    $vehicleController = new VehicleController($veiculoRepo);
+    $router->get('/api/vehicles', [$vehicleController, 'index']);
+}
+// Rota de estimativa - PRECISA de banco de dados
+elseif (str_starts_with($uri, '/api/estimate')) {
+    $pdo = Connection::getInstance();
+    $veiculoRepo = new PdoVeiculoRepository($pdo);
+    $placesService = new PlacesService();
+    $estimateService = new EstimateService($veiculoRepo, $placesService);
+    $whatsAppService = new WhatsAppService();
+    $estimateController = new EstimateController($estimateService, $whatsAppService);
+    $router->post('/api/estimate', [$estimateController, 'estimate']);
+}
+// Rota de agendamento - PRECISA de banco de dados
+elseif (str_starts_with($uri, '/api/booking')) {
+    $pdo = Connection::getInstance();
+    $veiculoRepo = new PdoVeiculoRepository($pdo);
+    $agendamentoRepo = new PdoAgendamentoRepository($pdo);
+    $placesService = new PlacesService();
+    $estimateService = new EstimateService($veiculoRepo, $placesService);
+    $whatsAppService = new WhatsAppService();
+    $bookingService = new BookingService($agendamentoRepo, $veiculoRepo, $estimateService, $whatsAppService);
+    $bookingController = new BookingController($bookingService);
+    $router->post('/api/booking', [$bookingController, 'store']);
+}
 
 $router->dispatch($request);

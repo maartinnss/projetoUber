@@ -23,6 +23,7 @@ class BookingService
      */
     public function create(array $data): array
     {
+        $data = $this->normalizeFields($data);
         $this->validate($data);
 
         // Calcula estimativa
@@ -65,6 +66,27 @@ class BookingService
         ];
     }
 
+    /**
+     * Normaliza campos de entrada (compatibilidade frontend/backend).
+     */
+    private function normalizeFields(array $data): array
+    {
+        // Frontend envia 'nome_cliente', backend espera 'nome'
+        if (isset($data['nome_cliente']) && !isset($data['nome'])) {
+            $data['nome'] = $data['nome_cliente'];
+        }
+
+        // Sanitiza strings contra XSS
+        $textFields = ['nome', 'whatsapp', 'origem', 'destino'];
+        foreach ($textFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = htmlspecialchars(strip_tags(trim($data[$field])), ENT_QUOTES, 'UTF-8');
+            }
+        }
+
+        return $data;
+    }
+
     private function validate(array $data): void
     {
         $required = ['nome', 'whatsapp', 'origem', 'destino', 'data_hora', 'veiculo_id'];
@@ -73,6 +95,40 @@ class BookingService
             if (empty($data[$field])) {
                 throw new \InvalidArgumentException("Campo obrigatório ausente: {$field}");
             }
+        }
+
+        // Validação de tamanho máximo
+        $maxLengths = ['nome' => 100, 'whatsapp' => 20, 'origem' => 255, 'destino' => 255];
+        foreach ($maxLengths as $field => $max) {
+            if (isset($data[$field]) && mb_strlen($data[$field]) > $max) {
+                throw new \InvalidArgumentException("Campo '{$field}' excede o tamanho máximo de {$max} caracteres.");
+            }
+        }
+
+        // Validação de formato de telefone (apenas dígitos, parênteses, espaços e hífens)
+        $phoneClean = preg_replace('/[^0-9]/', '', $data['whatsapp']);
+        if (strlen($phoneClean) < 10 || strlen($phoneClean) > 15) {
+            throw new \InvalidArgumentException('Número de WhatsApp inválido. Use formato: (XX) XXXXX-XXXX');
+        }
+
+        // Validação de data futura
+        try {
+            $dataHora = new DateTimeImmutable($data['data_hora']);
+            $agora = new DateTimeImmutable();
+            if ($dataHora < $agora) {
+                throw new \InvalidArgumentException('A data/hora deve ser no futuro.');
+            }
+        } catch (\Exception $e) {
+            if ($e instanceof \InvalidArgumentException) {
+                throw $e;
+            }
+            throw new \InvalidArgumentException('Data/hora inválida.');
+        }
+
+        // Validação de veículo ID (inteiro positivo)
+        $veiculoId = filter_var($data['veiculo_id'], FILTER_VALIDATE_INT);
+        if ($veiculoId === false || $veiculoId <= 0) {
+            throw new \InvalidArgumentException('ID de veículo inválido.');
         }
     }
 }
