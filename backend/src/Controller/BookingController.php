@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Application\Service\BookingService;
+use App\Domain\ValueObject\WhatsApp;
+use App\Domain\ValueObject\ScheduleDateTime;
 use App\Infrastructure\Http\JsonResponse;
 use App\Infrastructure\Http\Request;
+use InvalidArgumentException;
 
 class BookingController
 {
@@ -18,19 +21,35 @@ class BookingController
     {
         $body = $request->all();
 
-        if (empty($body)) {
-            JsonResponse::error('Requisição sem payload (JSON inválido/vazio).', 400);
-            return;
+        // Validação inicial de campos presentes
+        $required = ['nome_cliente', 'whatsapp', 'origem', 'destino', 'data_hora', 'veiculo_id'];
+        foreach ($required as $field) {
+            if (empty($body[$field])) {
+                JsonResponse::error("O campo {$field} é obrigatório.", 422);
+                return;
+            }
         }
 
         try {
-            $result = $this->bookingService->create($body);
-            JsonResponse::success($result, 201);
-        } catch (\InvalidArgumentException $e) {
-            JsonResponse::error($e->getMessage(), 422);
-        } catch (\Throwable $e) {
-            error_log('[BookingController] Erro não tratado: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-            JsonResponse::error('Erro interno do servidor.', 500);
+            // Conversão para Value Objects (Lógica de Domínio)
+            $whatsapp = new WhatsApp($body['whatsapp']);
+            $dataHora = new ScheduleDateTime($body['data_hora']);
+
+            $this->bookingService->create(
+                $body['nome_cliente'],
+                $whatsapp->getValue(),
+                $body['origem'],
+                $body['destino'],
+                $dataHora->getValue(),
+                (int) $body['veiculo_id'],
+            );
+
+            JsonResponse::success(['message' => 'Agendamento realizado com sucesso!']);
+        } catch (InvalidArgumentException $e) {
+            JsonResponse::error($e->getMessage(), 400);
+        } catch (\Exception $e) {
+            // Este log será capturado pelo Global Error Handler
+            throw $e;
         }
     }
 }

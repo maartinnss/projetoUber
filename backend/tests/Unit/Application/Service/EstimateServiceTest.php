@@ -7,21 +7,34 @@ namespace App\Tests\Unit\Application\Service;
 use App\Application\Service\EstimateService;
 use App\Application\Service\PlacesService;
 use App\Domain\Entity\ConfiguracaoVeiculo;
+use App\Domain\Exception\VehicleNotFoundException;
+use App\Domain\Repository\GeoCacheRepositoryInterface;
 use App\Domain\Repository\VeiculoRepositoryInterface;
 use App\Tests\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
 
 class EstimateServiceTest extends TestCase
 {
     private VeiculoRepositoryInterface|MockObject $veiculoRepo;
     private PlacesService|MockObject $placesService;
+    private GeoCacheRepositoryInterface|MockObject $cacheRepo;
+    private LoggerInterface|MockObject $logger;
     private EstimateService $estimateService;
 
     protected function setUp(): void
     {
         $this->veiculoRepo = $this->createMock(VeiculoRepositoryInterface::class);
         $this->placesService = $this->createMock(PlacesService::class);
-        $this->estimateService = new EstimateService($this->veiculoRepo, $this->placesService);
+        $this->cacheRepo = $this->createMock(GeoCacheRepositoryInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
+
+        $this->estimateService = new EstimateService(
+            $this->veiculoRepo,
+            $this->placesService,
+            $this->cacheRepo,
+            $this->logger
+        );
     }
 
     public function testCalculateSuccess(): void
@@ -43,7 +56,16 @@ class EstimateServiceTest extends TestCase
             ->with($veiculoId)
             ->willReturn($veiculo);
 
+        // Mock cache miss
+        $this->cacheRepo->expects($this->once())
+            ->method('findRoute')
+            ->willReturn(null);
+
         // Mock geocoding para evitar chamadas externas no teste unitário
+        $this->cacheRepo->expects($this->exactly(2))
+            ->method('findCoords')
+            ->willReturn(null);
+
         $this->placesService->expects($this->exactly(2))
             ->method('search')
             ->willReturnMap([
@@ -51,9 +73,11 @@ class EstimateServiceTest extends TestCase
                 [$destino, [['lat' => -27.6, 'lon' => -48.6]]],
             ]);
 
-        // Como OSRM é chamado via cURL internamente no EstimateService 
-        // e não está abstraído em um Client, o teste cairá no fallback 
-        // determinístico ou haversine se o cURL falhar/mocked.
+        $this->cacheRepo->expects($this->exactly(2))
+            ->method('saveCoords');
+
+        $this->cacheRepo->expects($this->once())
+            ->method('saveRoute');
         
         $result = $this->estimateService->calculate($origem, $destino, $veiculoId);
 
@@ -68,8 +92,7 @@ class EstimateServiceTest extends TestCase
     {
         $this->veiculoRepo->method('findById')->willReturn(null);
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Veículo não encontrado.');
+        $this->expectException(VehicleNotFoundException::class);
 
         $this->estimateService->calculate('A', 'B', 999);
     }

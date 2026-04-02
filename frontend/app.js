@@ -9,6 +9,51 @@ let vehicles = [];
 let lastEstimate = null;
 let appConfig = { whatsapp_number: '' };
 
+// ─── Toast System ───
+const Toast = {
+    show(title, message, type = 'info', duration = 5000) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        toast.innerHTML = `
+            <div class="toast-icon">${icons[type] || icons.info}</div>
+            <div class="toast-content">
+                <strong class="toast-title">${escapeHTML(title)}</strong>
+                <div class="toast-message">${escapeHTML(message)}</div>
+            </div>
+            <button class="toast-close">&times;</button>
+        `;
+
+        container.appendChild(toast);
+
+        // Auto remove
+        const timer = setTimeout(() => this.hide(toast), duration);
+
+        // Close button
+        toast.querySelector('.toast-close').onclick = () => {
+            clearTimeout(timer);
+            this.hide(toast);
+        };
+    },
+
+    hide(toast) {
+        toast.classList.add('hiding');
+        toast.addEventListener('animationend', () => {
+            toast.remove();
+        });
+    }
+};
+
 // ─── Security Helper ───
 function escapeHTML(str) {
     if (!str) return '';
@@ -262,12 +307,13 @@ function initCalculator() {
                     vehicleId,
                 };
                 showEstimateResult(json.data);
+                Toast.show("Sucesso", "Rota calculada com sucesso!", "success");
             } else {
-                alert("Erro: " + (json.error || json.message || "Não foi possível calcular a rota. Falha no formulário ou servidor."));
+                Toast.show("Atenção", (json.error || json.message || "Verifique os dados informados."), "warning");
             }
         } catch (err) {
             console.error(err);
-            alert("Falha ao comunicar com o servidor. A API pode estar desligada, sem banco de dados, ou inacessível.");
+            Toast.show("Erro", "Falha ao conectar com o servidor. Tente novamente.", "error");
         } finally {
             btn.classList.remove('loading');
         }
@@ -325,8 +371,10 @@ function initBookingForm() {
                     veiculo_id: parseInt(vehicleId, 10),
                 }),
             });
+
+            Toast.show("Agendamento Registrado", "Seu pedido foi salvo. Finalize no WhatsApp.", "success");
         } catch {
-            // Sem API, continua com WhatsApp mesmo assim
+            Toast.show("Aviso", "O servidor de registro falhou, mas você pode seguir via WhatsApp.", "warning");
         }
 
         // Montar link WhatsApp
