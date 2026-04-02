@@ -6,11 +6,8 @@ namespace App\Controller;
 
 use App\Application\Service\EstimateService;
 use App\Application\Service\WhatsAppService;
-use App\Domain\ValueObject\WhatsApp;
-use App\Domain\Exception\DomainException;
 use App\Infrastructure\Http\JsonResponse;
 use App\Infrastructure\Http\Request;
-use Exception;
 
 class EstimateController
 {
@@ -29,19 +26,15 @@ class EstimateController
         }
 
         try {
-            // Valida o WhatsApp se fornecido (opcional para estimativa, mas bom validar)
-            $whatsappStr = $body['whatsapp'] ?? '00000000000';
-            $whatsapp = new WhatsApp($whatsappStr);
-
             $result = $this->estimateService->calculate(
                 $body['origem'],
                 $body['destino'],
                 (int) $body['veiculo_id'],
             );
 
-            // Gera link WhatsApp de pré-visualização
+            // Gera link WhatsApp de pré-visualização (sem dados pessoais)
             $whatsappLink = $this->whatsAppService->generateLink(
-                $whatsapp->getValue(),
+                $body['whatsapp'] ?? '0',
                 [
                     'origem' => $body['origem'],
                     'destino' => $body['destino'],
@@ -54,10 +47,8 @@ class EstimateController
             $result['whatsapp_link'] = $whatsappLink;
 
             JsonResponse::success($result);
-        } catch (DomainException $e) {
-            JsonResponse::error($e->getMessage(), $e->getStatusCode());
-        } catch (Exception $e) {
-            JsonResponse::error('Ocorreu um erro inesperado no processamento.', 500);
+        } catch (\InvalidArgumentException $e) {
+            JsonResponse::error($e->getMessage(), 404);
         }
     }
 }

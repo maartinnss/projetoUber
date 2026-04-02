@@ -1,6 +1,5 @@
 # Environments
 /.env
-.env*
 
 # Dependencies
 /backend/vendor/
@@ -16,11 +15,6 @@
 /.idea/
 .DS_Store
 Thumbs.db
-
-# Test Scripts (Local only)
-test_*.php
-api_test.php
-curl_opt.log
 
 # AI and Artifacts
 .gemini/
