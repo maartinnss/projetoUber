@@ -14,7 +14,7 @@ class PlacesController
         private readonly PlacesService $placesService
     ) {}
 
-    public function search(Request $request): void
+    public function search(Request $request, array $params = []): void
     {
         $query = $request->get('q', '');
 

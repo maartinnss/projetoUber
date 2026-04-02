@@ -4,14 +4,32 @@ declare(strict_types=1);
 
 namespace App\Application\Service;
 
+use App\Infrastructure\Cache\SimpleFileCache;
+
 class PlacesService
 {
+    private SimpleFileCache $cache;
+
+    public function __construct(?SimpleFileCache $cache = null)
+    {
+        $this->cache = $cache ?? new SimpleFileCache();
+    }
+
     /**
      * Busca endereços e sanitiza as duplicatas da base oficial do OpenStreetMap
      * usando a Photon API (komoot), otimizada e livre.
      */
     public function search(string $query): array
     {
+        $queryClean = mb_strtolower(trim($query));
+        $cacheKey = "places_" . md5($queryClean);
+
+        // Tenta buscar do cache primeiro (Cache-Aside)
+        $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
         // Adiciona "Brasil" implicitamente para afunilar a busca.
         $encodedQuery = urlencode($query . ", Brasil");
         $url = "https://photon.komoot.io/api/?q={$encodedQuery}&limit=15";
@@ -92,6 +110,10 @@ class PlacesService
                     break; // Retorna no máximo 5 opções excelentes
                 }
             }
+        }
+
+        if (!empty($results)) {
+            $this->cache->set($cacheKey, $results);
         }
 
         return $results;

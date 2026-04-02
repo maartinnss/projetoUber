@@ -5,14 +5,18 @@
 /backend/vendor/
 /node_modules/
 
-# IDEs and System files
-/.vscode/
-/.idea/
-/.agent/
-.agent/
-.DS_Store
-Thumbs.db
-
 # Logs and DB
 *.log
 *.sqlite
+.phpunit.result.cache
+
+# IDEs and System files
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
+
+# AI and Artifacts
+.gemini/
+.agent/
+/.agent/

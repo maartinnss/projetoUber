@@ -56,45 +56,31 @@ if (!$rateLimiter->allow($uri)) {
 $router = new Router();
 $request = new Request();
 
-// Rota de configurações públicas - NÃO precisa de banco de dados
-if (str_starts_with($uri, '/api/config')) {
-    $configController = new ConfigController();
-    $router->get('/api/config', [$configController, 'index']);
-}
-// Rota de busca de endereços - NÃO precisa de banco de dados
-elseif (str_starts_with($uri, '/api/places')) {
-    $placesService = new PlacesService();
-    $placesController = new PlacesController($placesService);
-    $router->get('/api/places', [$placesController, 'search']);
-} 
-// Rota de veículos - PRECISA de banco de dados
-elseif (str_starts_with($uri, '/api/vehicles')) {
-    $pdo = Connection::getInstance();
-    $veiculoRepo = new PdoVeiculoRepository($pdo);
-    $vehicleController = new VehicleController($veiculoRepo);
-    $router->get('/api/vehicles', [$vehicleController, 'index']);
-}
-// Rota de estimativa - PRECISA de banco de dados
-elseif (str_starts_with($uri, '/api/estimate')) {
-    $pdo = Connection::getInstance();
-    $veiculoRepo = new PdoVeiculoRepository($pdo);
-    $placesService = new PlacesService();
-    $estimateService = new EstimateService($veiculoRepo, $placesService);
-    $whatsAppService = new WhatsAppService();
-    $estimateController = new EstimateController($estimateService, $whatsAppService);
-    $router->post('/api/estimate', [$estimateController, 'estimate']);
-}
-// Rota de agendamento - PRECISA de banco de dados
-elseif (str_starts_with($uri, '/api/booking')) {
-    $pdo = Connection::getInstance();
-    $veiculoRepo = new PdoVeiculoRepository($pdo);
-    $agendamentoRepo = new PdoAgendamentoRepository($pdo);
-    $placesService = new PlacesService();
-    $estimateService = new EstimateService($veiculoRepo, $placesService);
-    $whatsAppService = new WhatsAppService();
-    $bookingService = new BookingService($agendamentoRepo, $veiculoRepo, $estimateService, $whatsAppService);
-    $bookingController = new BookingController($bookingService);
-    $router->post('/api/booking', [$bookingController, 'store']);
-}
+// Rota de configurações públicas
+$router->get('/api/config', [new ConfigController(), 'index']);
+
+// Geocodificação (Search)
+$router->get('/api/places', [new PlacesController(new PlacesService()), 'search']);
+
+// Veículos
+$pdo = Connection::getInstance();
+$veiculoRepo = new PdoVeiculoRepository($pdo);
+$vehicleController = new VehicleController($veiculoRepo);
+
+$router->get('/api/vehicles', [$vehicleController, 'index']);
+$router->get('/api/vehicles/{id}', [$vehicleController, 'show']); // Nova rota dinâmica!
+
+// Estimativa
+$placesService = new PlacesService();
+$estimateService = new EstimateService($veiculoRepo, $placesService);
+$whatsAppService = new WhatsAppService();
+$estimateController = new EstimateController($estimateService, $whatsAppService);
+$router->post('/api/estimate', [$estimateController, 'estimate']);
+
+// Agendamento
+$agendamentoRepo = new PdoAgendamentoRepository($pdo);
+$bookingService = new BookingService($agendamentoRepo, $veiculoRepo, $estimateService, $whatsAppService);
+$bookingController = new BookingController($bookingService);
+$router->post('/api/booking', [$bookingController, 'store']);
 
 $router->dispatch($request);

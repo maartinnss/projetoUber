@@ -22,7 +22,11 @@ class Router
     
     private function addRoute(string $method, string $uri, callable|array $action): void
     {
-        $this->routes[$method][$uri] = $action;
+        // Converte {param} para regex: [^/]+
+        $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[^/]+)', $uri);
+        $pattern = "#^" . $pattern . "$#";
+        
+        $this->routes[$method][$pattern] = $action;
     }
 
     public function dispatch(Request $request): void
@@ -30,24 +34,36 @@ class Router
         $method = $request->getMethod();
         $uri = $request->getUri();
 
-        // Check if the route exists
-        if (isset($this->routes[$method][$uri])) {
-            $action = $this->routes[$method][$uri];
-
-            if (is_callable($action)) {
-                call_user_func($action, $request);
-            } elseif (is_array($action) && count($action) === 2) {
-                // $action = [ControllerInstance, 'methodName']
-                [$classOrObject, $methodName] = $action;
-
-                if (is_object($classOrObject)) {
-                    $classOrObject->$methodName($request);
-                } else {
-                    JsonResponse::error("Router Misconfiguration: Expected object instance for route.", 500);
-                }
+        $routes = $this->routes[$method] ?? [];
+        
+        foreach ($routes as $pattern => $action) {
+            if (preg_match($pattern, $uri, $matches)) {
+                // Remove chaves numéricas do preg_match para deixar apenas os parâmetros nomeados
+                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                
+                // Adiciona parâmetros ao Request (opcional, aqui injetamos na ação)
+                $this->executeAction($action, $request, $params);
+                return;
             }
-        } else {
-            JsonResponse::error('Rota não encontrada: ' . $method . ' ' . $uri, 404);
+        }
+
+        JsonResponse::error('Rota não encontrada: ' . $method . ' ' . $uri, 404);
+    }
+
+    private function executeAction(callable|array $action, Request $request, array $params): void
+    {
+        if (is_callable($action)) {
+            call_user_func($action, $request, $params);
+            return;
+        }
+
+        if (is_array($action) && count($action) === 2) {
+            [$controller, $methodName] = $action;
+            if (is_object($controller)) {
+                $controller->$methodName($request, $params);
+            } else {
+                JsonResponse::error("Router Misconfiguration: Expected object instance.", 500);
+            }
         }
     }
 }

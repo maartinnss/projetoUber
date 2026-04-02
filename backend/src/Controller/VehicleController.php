@@ -14,12 +14,25 @@ class VehicleController
         private readonly VeiculoRepositoryInterface $veiculoRepo,
     ) {}
 
-    public function index(Request $request): void
+    public function index(Request $request, array $params = []): void
     {
         $veiculos = $this->veiculoRepo->findAllActive();
 
         $result = array_map(fn($v) => $v->toArray(), $veiculos);
 
         JsonResponse::success($result);
+    }
+
+    public function show(Request $request, array $params): void
+    {
+        $id = (int) ($params['id'] ?? 0);
+        $veiculo = $this->veiculoRepo->findById($id);
+
+        if (!$veiculo) {
+            JsonResponse::error('Veículo não encontrado.', 404);
+            return;
+        }
+
+        JsonResponse::success($veiculo->toArray());
     }
 }

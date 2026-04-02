@@ -14,7 +14,7 @@ class BookingController
         private readonly BookingService $bookingService,
     ) {}
 
-    public function store(Request $request): void
+    public function store(Request $request, array $params = []): void
     {
         $body = $request->all();
 

@@ -9,6 +9,14 @@ let vehicles = [];
 let lastEstimate = null;
 let appConfig = { whatsapp_number: '' };
 
+// ─── Security Helper ───
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 
 // ─── DOM Ready ───
 document.addEventListener('DOMContentLoaded', () => {
@@ -177,19 +185,20 @@ function renderVehicleCards() {
     if (!grid) return;
 
     grid.innerHTML = vehicles.map(v => {
-        const t = v.tipo || 'sedan';
-        const cap = v.capacidade_passageiros || 4;
+        const t = escapeHTML(v.tipo || 'sedan');
+        const cap = parseInt(v.capacidade_passageiros || 4, 10);
         const price = Number(v.preco_por_km || 3.5).toFixed(2);
+        const modelo = escapeHTML(v.modelo || 'Veículo');
         
         return `
         <div class="vehicle-card glass-card">
             <span class="vehicle-icon">${getVehicleEmoji(t)}</span>
-            <h3>${v.modelo || 'Veículo'}</h3>
+            <h3>${modelo}</h3>
             <p class="vehicle-cap">${t.charAt(0).toUpperCase() + t.slice(1)} · ${cap} passageiros</p>
             <div class="vehicle-price gradient-text">R$ ${price}</div>
             <p class="vehicle-price-unit">por quilômetro</p>
             <ul class="vehicle-features">
-                ${getVehicleFeatures(t).map(f => `<li>${f}</li>`).join('')}
+                ${getVehicleFeatures(t).map(f => `<li>${escapeHTML(f)}</li>`).join('')}
             </ul>
         </div>
     `}).join('');
@@ -203,12 +212,18 @@ function populateVehicleSelects() {
 
     selects.forEach(sel => {
         if (!sel) return;
-        sel.innerHTML = '<option value="">Selecione um veículo</option>' +
-            vehicles.map(v => {
-                const t = v.tipo || 'sedan';
-                const price = Number(v.preco_por_km || 3.5).toFixed(2);
-                return `<option value="${v.id}">${getVehicleEmoji(t)} ${v.modelo || 'Veículo'} — R$ ${price}/km</option>`
-            }).join('');
+        
+        // Limpa opções existentes
+        sel.innerHTML = '<option value="">Selecione um veículo</option>';
+        
+        vehicles.forEach(v => {
+            const t = v.tipo || 'sedan';
+            const price = Number(v.preco_por_km || 3.5).toFixed(2);
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = `${getVehicleEmoji(t)} ${v.modelo || 'Veículo'} — R$ ${price}/km`;
+            sel.appendChild(opt);
+        });
     });
 }
 
@@ -428,6 +443,7 @@ async function fetchSuggestions(query, dropdown, input) {
                 item.className = 'autocomplete-item';
 
                 const displayName = place.display_name;
+                // Usar textContent em vez de innerHTML/textContent direto na criação
                 item.textContent = displayName;
 
                 item.addEventListener('click', () => {

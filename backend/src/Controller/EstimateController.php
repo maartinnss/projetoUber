@@ -16,7 +16,7 @@ class EstimateController
         private readonly WhatsAppService $whatsAppService,
     ) {}
 
-    public function estimate(Request $request): void
+    public function estimate(Request $request, array $params = []): void
     {
         $body = $request->all();
 

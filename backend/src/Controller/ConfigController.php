@@ -9,7 +9,7 @@ use App\Infrastructure\Http\Request;
 
 class ConfigController
 {
-    public function index(Request $request): void
+    public function index(Request $request, array $params = []): void
     {
         JsonResponse::success([
             'whatsapp_number' => getenv('WHATSAPP_NUMBER') ?: '554896643792',
